@@ -82,7 +82,7 @@ export const SEARCH_USER = gql`
       id
       name
       profileImage
-      bio
+      bio 
     }
   }
 `;
@@ -138,4 +138,21 @@ export const GET_USER_INFO = gql`
   }
 `;
 
-    
+    export const FOLLOW_AND_UNFOLLOW = gql`
+  mutation FollowAndUnfollow($id: ID!) {
+    followAndUnfollow(id: $id) {
+      id
+      name
+      username
+      profileImage
+      followers {
+        id
+        name
+      }
+      following {
+        id
+        name
+      }
+    }
+  }
+`;

@@ -27,6 +27,15 @@ app.use(cors({
 // ✅ File upload middleware
 app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 1 }));
 
+// Log incoming /graphql POST requests for debugging
+app.use('/graphql', express.json(), (req, res, next) => {
+  if (req.method === 'POST') {
+    console.log('--- Incoming /graphql request body ---');
+    console.log(JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
 // ✅ Apollo Server Setup
 async function startServer() {
   const server = new ApolloServer({

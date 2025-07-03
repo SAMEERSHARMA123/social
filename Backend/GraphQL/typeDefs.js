@@ -1,4 +1,3 @@
-
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
@@ -18,6 +17,7 @@ const typeDefs = gql`
     bio: String
     followers: [User]           # Suggestion System Support
     following: [User]           # Suggestion System Support
+    posts: [Post]               # Added to support searchUsers query
   }
 
   type OtpResponse {

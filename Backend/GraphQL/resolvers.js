@@ -8,9 +8,9 @@ const { GraphQLUpload } = require('graphql-upload');
 const Post = require('../Models/Post');
 const { uploadToCloudinary } = require('../Utils/cloudinary');
 
-// In-memory OTP storage
 const otpStore = {};
 
+// Auto-clean expired OTPs
 setInterval(() => {
   const now = new Date();
   Object.keys(otpStore).forEach(email => {
@@ -22,41 +22,26 @@ const resolvers = {
   Upload: GraphQLUpload,
 
   Query: {
-    users: async () => await User.find().select('id name username email phone profileImage bio createTime'),
+    users: async () =>
+      await User.find().select('id name username email phone profileImage bio createTime'),
 
-    getAllPosts: async () => await Post.find().sort({ createdAt: -1 }),
+    getAllPosts: async () =>
+      await Post.find().sort({ createdAt: -1 }),
 
     searchUsers: async (_, { username }) => {
       try {
-        console.log('Searching for users with term:', username);
-        
-        // Search by name or username (case insensitive)
         const users = await User.find({
           $or: [
             { name: { $regex: username, $options: 'i' } },
             { username: { $regex: username, $options: 'i' } }
           ]
-        }).select('id name username email phone profileImage bio createTime followers following posts')
+        })
+          .select('id name username email phone profileImage bio createTime followers following posts')
           .populate('followers', 'id name')
           .populate('following', 'id name')
           .populate('posts', 'id caption imageUrl createdAt')
-          .limit(10); // Limit results to 10 users
-        
-        console.log('Found users:', users.length);
-        console.log('First user data:', users[0] ? {
-          id: users[0]._id,
-          name: users[0].name,
-          username: users[0].username,
-          email: users[0].email,
-          phone: users[0].phone,
-          profileImage: users[0].profileImage,
-          bio: users[0].bio,
-          createTime: users[0].createTime,
-          followersCount: users[0].followers?.length || 0,
-          followingCount: users[0].following?.length || 0,
-          postsCount: users[0].posts?.length || 0
-        } : 'No users found');
-        
+          .limit(10);
+
         return users;
       } catch (error) {
         console.error('Search users error:', error);
@@ -207,13 +192,24 @@ const resolvers = {
       return targetUser;
     },
 
-    getUserInformation : async(_,{id}) => {
-       const user = await User.findById(id);
+    getUserInformation: async (_, { id }) => {
+      const user = await User.findById(id);
       if (!user) throw new Error("User not found");
       return user;
     }
+  },
+
+  // ✅ NEWLY ADDED: Follower/Following Resolvers
+  User: {
+    followers: async (parent) => {
+      const user = await User.findById(parent.id).populate("followers");
+      return user.followers;
+    },
+    following: async (parent) => {
+      const user = await User.findById(parent.id).populate("following");
+      return user.following;
+    },
   }
 };
 
 module.exports = resolvers;
-
